@@ -1,0 +1,29 @@
+<!-- therapist/templates/therapist/schedule_list.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Your Weekly Schedule</h2>
+    <ul class="list-group">
+        {% for schedule in schedules %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ schedule.get_day_of_week_display }}:</strong>
+                    {{ schedule.start_time }} - {{ schedule.end_time }}
+                    {% if schedule.break_start and schedule.break_end %}
+                        <em>(Break: {{ schedule.break_start }} - {{ schedule.break_end }})</em>
+                    {% endif %}
+                </div>
+                <div>
+                    <a href="{% url 'schedule_detail' schedule.pk %}" class="btn btn-info btn-sm">View</a>
+                    <a href="{% url 'edit_schedule' schedule.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="{% url 'delete_schedule' schedule.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                </div>
+            </li>
+        {% empty %}
+            <li class="list-group-item">No schedule set up yet.</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'create_schedule' %}" class="btn btn-primary mt-3">Add Schedule</a>
+</div>
+{% endblock %}

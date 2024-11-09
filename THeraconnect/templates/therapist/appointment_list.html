@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Your Appointments</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Date</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Status</th>
+                    <th>Zoom Link</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                    <tr>
+                        <td>{{ appointment.client.username }}</td>
+                        <td>{{ appointment.date }}</td>
+                        <td>{{ appointment.start_time }}</td>
+                        <td>{{ appointment.end_time }}</td>
+                        <td>{{ appointment.get_status_display }}</td>
+                        <td>{% if appointment.zoom_link %}
+                                <a href="{{ appointment.zoom_link }}" target="_blank">Join Zoom</a>
+                            {% else %}
+                                No Zoom Link
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'confirm_appointment' appointment.pk %}" class="btn btn-primary btn-sm">Confirm Appointment</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">No appointments scheduled.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

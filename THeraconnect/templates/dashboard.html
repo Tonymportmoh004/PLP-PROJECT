@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Your Appointments</h2>
+    <ul class="list-group">
+        {% for appointment in appointments %}
+            <li class="list-group-item">
+                <a href="{% url 'appointment_messages' appointment.id %}">{{ appointment.therapist.username }} - {{ appointment.date }} at {{ appointment.start_time }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

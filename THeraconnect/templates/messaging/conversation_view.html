@@ -1,0 +1,21 @@
+<!-- messaging/templates/messaging/conversation_view.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h3>Conversation with {% if conversation.user1 == user %}{{ conversation.user2.username }}{% else %}{{ conversation.user1.username }}{% endif %}</h3>
+        <div id="messages">
+            {% for message in messages %}
+                <div class="message">
+                    <strong>{{ message.sender.username }}</strong>: {{ message.content }}
+                    <span class="timestamp">{{ message.timestamp }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="message" placeholder="Type your message..." class="form-control">
+            <button type="submit" class="btn btn-primary mt-2">Send</button>
+        </form>
+    </div>
+{% endblock %}

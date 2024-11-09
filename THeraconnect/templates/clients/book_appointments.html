@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Book an Appointment</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+
+        <button type="submit" class="btn btn-primary">Book Appointment</button>
+    </form>
+    <a href="{% url 'appointment_list' %}" class="btn btn-secondary mt-3">Back to Appointments</a>
+</div>
+
+{% block extra_js %}
+<script type="text/javascript">
+    // Initialize time picker
+    $(document).ready(function() {
+        $('input[type="time"]').timepicker({
+            timeFormat: 'HH:mm',
+            interval: 30,  // Set interval to 30 minutes
+            minTime: '08:00',
+            maxTime: '20:00',
+            dynamic: true,
+            dropdown: true,
+            scrollbar: true
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

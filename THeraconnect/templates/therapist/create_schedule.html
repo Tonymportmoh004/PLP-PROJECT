@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Create Schedule</h2>
+    <form method="post" class="form-horizontal">
+        {% csrf_token %}
+        {{ form|crispy }}
+        
+        <button type="submit" class="btn btn-primary">Save Schedule</button>
+    </form>
+    
+    <a href="{% url 'schedule_list' %}" class="btn btn-secondary mt-3">Back to Schedules</a>
+</div>
+
+{% block extra_js %}
+<script type="text/javascript">
+    // This will initialize the timepicker if you are using a JS-based timepicker
+    // Example for Bootstrap Timepicker or jQuery Timepicker
+    $(document).ready(function() {
+        // Initialize timepicker for all time input fields
+        $('input[type="time"]').timepicker({
+            timeFormat: 'HH:mm',
+            interval: 30, // Set interval to 30 minutes
+            minTime: '06:00',
+            maxTime: '22:00',
+            dynamic: true,
+            dropdown: true,
+            scrollbar: true
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

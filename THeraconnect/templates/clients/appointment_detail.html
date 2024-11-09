@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Appointment Details</h2>
+    <table class="table table-bordered">
+        <tr>
+            <th>Therapist</th>
+            <td>{{ appointment.therapist }}</td>
+        </tr>
+        <tr>
+            <th>Client</th>
+            <td>{{ appointment.client }}</td>
+        </tr>
+        <tr>
+            <th>Date</th>
+            <td>{{ appointment.date }}</td>
+        </tr>
+        <tr>
+            <th>Start Time</th>
+            <td>{{ appointment.start_time }}</td>
+        </tr>
+        <tr>
+            <th>End Time</th>
+            <td>{{ appointment.end_time }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>{{ appointment.status }}</td>
+        </tr>
+    </table>
+    <a href="{% url 'edit_appointment' appointment.pk %}" class="btn btn-primary">Edit</a>
+    <a href="{% url 'delete_appointment' appointment.pk %}" class="btn btn-danger">Delete</a>
+    <a href="{% url 'appointment_list' %}" class="btn btn-secondary">Back to Appointments</a>
+</div>
+{% endblock %}

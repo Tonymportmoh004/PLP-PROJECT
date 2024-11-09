@@ -1,0 +1,19 @@
+<!-- therapist/templates/therapist/schedule_detail.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Schedule Details</h2>
+    <ul class="list-group">
+        <li class="list-group-item"><strong>Day:</strong> {{ schedule.get_day_of_week_display }}</li>
+        <li class="list-group-item"><strong>Start Time:</strong> {{ schedule.start_time }}</li>
+        <li class="list-group-item"><strong>End Time:</strong> {{ schedule.end_time }}</li>
+        {% if schedule.break_start and schedule.break_end %}
+            <li class="list-group-item"><strong>Break:</strong> {{ schedule.break_start }} - {{ schedule.break_end }}</li>
+        {% endif %}
+    </ul>
+    <a href="{% url 'edit_schedule' schedule.pk %}" class="btn btn-primary mt-3">Edit Schedule</a>
+    <a href="{% url 'delete_schedule' schedule.pk %}" class="btn btn-danger mt-3">Delete Schedule</a>
+    <a href="{% url 'schedule_list' %}" class="btn btn-secondary mt-3">Back to Schedule List</a>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+<!-- client/templates/client/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2>Welcome, {{ user.username }}</h2>
+
+        <h3>Your Appointments</h3>
+        <ul>
+            {% for appointment in appointments %}
+                <li>
+                    {{ appointment.therapist.username }} - {{ appointment.date }} - {{ appointment.status }}
+                    <a href="{% url 'conversation' appointment.conversation.id %}" class="btn btn-primary btn-sm">View Conversation</a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <h3>Your Conversations</h3>
+        <ul>
+            {% for conversation in conversations %}
+                <li>
+                    <a href="{% url 'conversation' conversation.id %}">
+                        Conversation with {% if conversation.user1 == user %}{{ conversation.user2.username }}{% else %}{{ conversation.user1.username }}{% endif %}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
