@@ -1,8 +1,9 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit, Layout, Row, Column
-from .models import TherapistSchedule
+from .models import TherapistSchedule, Appointment, Message
 from django.forms.widgets import TimeInput
+
 
 class TherapistScheduleForm(forms.ModelForm):
     class Meta:
@@ -49,14 +50,39 @@ class TherapistScheduleForm(forms.ModelForm):
             self.add_error('break_start', "Both break start and end times must be provided.")
         
         return cleaned_data
-from django import forms
-from client.models import Appointment
 
-class ConfirmAppointmentForm(forms.ModelForm):
+class AppointmentForm(forms.ModelForm):
     class Meta:
         model = Appointment
-        fields = ['status', 'zoom_link']
+        fields = ['client', 'date', 'start_time', 'end_time', 'zoom_link', 'status', 'notes']
         widgets = {
-            'status': forms.Select(choices=[('confirmed', 'Confirmed')]),
-            'zoom_link': forms.URLInput(attrs={'placeholder': 'Enter Zoom link'}),
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'start_time': TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'end_time': TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'zoom_link': forms.URLInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.layout = Layout(
+            Row(
+                Column('client', css_class='form-group col-md-6 mb-0'),
+                Column('date', css_class='form-group col-md-6 mb-0'),
+            ),
+            Row(
+                Column('start_time', css_class='form-group col-md-6 mb-0'),
+                Column('end_time', css_class='form-group col-md-6 mb-0'),
+            ),
+            Row(
+                Column('zoom_link', css_class='form-group col-md-12 mb-0'),
+            ),
+            Row(
+                Column('status', css_class='form-group col-md-6 mb-0'),
+                Column('notes', css_class='form-group col-md-6 mb-0'),
+            ),
+            Submit('submit', 'Save Appointment')
+        )

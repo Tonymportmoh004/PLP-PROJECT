@@ -1,21 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Resource Detail{% endblock %}
+{% block title %}Resource Details{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1>{{ resource.title }}</h1>
-    <p>{{ resource.description }}</p>
-    {% if resource.resource_type == 'youtube' %}
-    <iframe width="560" height="315" src="{{ resource.youtube_url }}" frameborder="0" allowfullscreen></iframe>
-    {% elif resource.resource_type == 'pdf' %}
-    <embed src="{{ resource.pdf_file.url }}" width="600" height="500" alt="pdf" />
-    {% else %}
-    <a href="{{ resource.other_file.url }}" download>{{ resource.other_file.name }}</a>
-    {% endif %}
-    {% if resource.creator == user %}
-    <a href="{% url 'resource_edit' resource.pk %}">Edit</a>
-    <a href="{% url 'resource_delete' resource.pk %}">Delete</a>
-    {% endif %}
-</div>
+<h1>{{ resource.title }}</h1>
+
+<p>{{ resource.description }}</p>
+<p>Type: {{ resource.get_resource_type_display }}</p>
+<p>Uploaded by: {{ resource.uploaded_by.username }}</p>
+<p>Uploaded at: {{ resource.uploaded_at }}</p>
+
+<a href="{{ resource.file.url }}" class="btn btn-primary">Download</a>
+
+{% if user == resource.uploaded_by %}
+  <a href="{% url 'resource_edit' resource.pk %}" class="btn btn-secondary">Edit</a>
+{% endif %}
 {% endblock %}

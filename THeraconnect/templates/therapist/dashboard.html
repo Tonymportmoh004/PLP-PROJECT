@@ -1,29 +1,32 @@
-<!-- therapist/templates/therapist/dashboard.html -->
 {% extends 'base.html' %}
 
+{% block title %}Therapist Dashboard{% endblock %}
+
 {% block content %}
-    <div class="container mt-5">
-        <h2>Welcome, Dr. {{ user.username }}</h2>
+<h1>Therapist Dashboard</h1>
 
-        <h3>Your Appointments</h3>
-        <ul>
-            {% for appointment in appointments %}
-                <li>
-                    {{ appointment.client.username }} - {{ appointment.date }} - {{ appointment.status }}
-                    <a href="{% url 'update_appointment_status' appointment.id %}" class="btn btn-info btn-sm">Update Status</a>
-                </li>
-            {% endfor %}
-        </ul>
+<h2>Upcoming Appointments</h2>
+<ul class="list-group">
+  {% for appointment in appointments %}
+    <li class="list-group-item">
+      {{ appointment.date }} - {{ appointment.start_time }} to {{ appointment.end_time }}
+      <a href="{% url 'appointment_detail' appointment.id %}" class="btn btn-info btn-sm">Details</a>
+      <a href="{% url 'chat_view' appointment.id %}" class="btn btn-primary btn-sm">Chat</a>
+    </li>
+  {% empty %}
+    <li class="list-group-item">No upcoming appointments.</li>
+  {% endfor %}
+</ul>
 
-        <h3>Your Conversations</h3>
-        <ul>
-            {% for conversation in conversations %}
-                <li>
-                    <a href="{% url 'conversation' conversation.id %}">
-                        Conversation with {% if conversation.user1 == user %}{{ conversation.user2.username }}{% else %}{{ conversation.user1.username }}{% endif %}
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+<h2>Your Schedules</h2>
+<ul class="list-group">
+  {% for schedule in schedules %}
+    <li class="list-group-item">{{ schedule.get_day_of_week_display }}: {{ schedule.start_time }} - {{ schedule.end_time }}</li>
+  {% empty %}
+    <li class="list-group-item">No schedules found.</li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'create_schedule' %}" class="btn btn-primary mt-3">Create Schedule</a>
+<a href="{% url 'manage_appointments' %}" class="btn btn-primary mt-3">Manage Appointments</a>
 {% endblock %}

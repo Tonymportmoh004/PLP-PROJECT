@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Find a Therapist{% endblock %}
+
+{% block content %}
+<h1>Find a Therapist</h1>
+
+<form method="get" action="{% url 'client:find_therapist' %}" class="form-inline mb-4">
+    <input type="text" name="q" class="form-control mr-2" placeholder="Search therapists..." value="{{ query }}">
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+{% if therapists %}
+    <ul class="list-group">
+        {% for therapist in therapists %}
+            <li class="list-group-item">
+                <h5>{{ therapist.username }}</h5>
+                <p>{{ therapist.profile.specialization }}</p>
+                <a href="{% url 'client:book_appointment' %}?therapist={{ therapist.id }}" class="btn btn-primary">Book Appointment</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No therapists found.</p>
+{% endif %}
+{% endblock %}
+

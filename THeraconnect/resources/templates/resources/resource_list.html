@@ -1,0 +1,14 @@
+<h1>Resources</h1>
+
+<a href="{% url 'resource_upload' %}">Upload New Resource</a>
+
+<ul>
+  {% for resource in resources %}
+    <li>
+      <a href="{% url 'resource_detail' resource.pk %}">{{ resource.title }}</a>
+      ({{ resource.get_resource_type_display }})
+    </li>
+  {% empty %}
+    <li>No resources available.</li>
+  {% endfor %}
+</ul>

@@ -1,145 +1,103 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.urls import reverse
-from django.utils import timezone
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from .models import Appointment
-from .forms import AppointmentForm
-from therapist.models import TherapistSchedule
-from django.core.paginator import Paginator
-from django.contrib.auth.models import User
-
-def check_date_and_schedule(therapist, date, start_time, end_time):
-    """Helper to ensure the date is valid and within the therapist's schedule."""
-    if date < timezone.now().date():
-        return "The selected date cannot be in the past."
-
-    weekday = date.weekday()
-    therapist_schedule = TherapistSchedule.objects.filter(
-        therapist=therapist, day_of_week=weekday
-    ).first()
-    if not therapist_schedule or not therapist_schedule.is_within_schedule(start_time, end_time):
-        return "The selected time is outside the therapist's available hours."
-
-    return None  # Indicates no errors
-
-def check_conflict(therapist, date, start_time, end_time, exclude_pk=None):
-    """Helper to check for conflicting appointments."""
-    conflicts = Appointment.objects.filter(
-        therapist=therapist,
-        date=date,
-        start_time__lt=end_time,
-        end_time__gt=start_time
-    )
-    if exclude_pk:
-        conflicts = conflicts.exclude(pk=exclude_pk)
-    return conflicts.exists()
-
-@login_required
-def create_appointment(request):
-    """View for creating a new appointment with real-time conflict and schedule checks."""
-    form = AppointmentForm(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        form.instance.client = request.user
-        therapist = form.cleaned_data['therapist']
-        date = form.cleaned_data['date']
-        start_time = form.cleaned_data['start_time']
-        end_time = form.cleaned_data['end_time']
-        
-        date_schedule_error = check_date_and_schedule(therapist, date, start_time, end_time)
-        if date_schedule_error:
-            messages.error(request, date_schedule_error)
-        elif check_conflict(therapist, date, start_time, end_time):
-            messages.error(request, "This time slot is already booked. Please choose another.")
-        else:
-            form.save()
-            messages.success(request, "Appointment created successfully.")
-            return redirect(reverse('appointment_list'))
-    
-    return render(request, 'clients/book_appointments.html', {'form': form})
-
-@login_required
-def edit_appointment(request, pk):
-    """View for editing an existing appointment with conflict and schedule checks."""
-    appointment = get_object_or_404(Appointment, pk=pk)
-    form = AppointmentForm(request.POST or None, instance=appointment)
-    
-    if request.method == 'POST' and form.is_valid():
-        form.instance.client = request.user
-        therapist = form.cleaned_data['therapist']
-        date = form.cleaned_data['date']
-        start_time = form.cleaned_data['start_time']
-        end_time = form.cleaned_data['end_time']
-
-        date_schedule_error = check_date_and_schedule(therapist, date, start_time, end_time)
-        if date_schedule_error:
-            messages.error(request, date_schedule_error)
-        elif check_conflict(therapist, date, start_time, end_time, exclude_pk=appointment.pk):
-            messages.error(request, "This time slot is already booked. Please choose another.")
-        else:
-            form.save()
-            messages.success(request, "Appointment updated successfully.")
-            return redirect(reverse('appointment_list'))
-    
-    return render(request, 'clients/edit_appointment.html', {'form': form, 'appointment': appointment})
-
-@login_required
-def delete_appointment(request, pk):
-    """View to delete an appointment."""
-    appointment = get_object_or_404(Appointment, pk=pk)
-    if request.method == 'POST':
-        appointment.delete()
-        messages.success(request, "Appointment deleted successfully.")
-        return redirect(reverse('appointment_list'))
-    return render(request, 'clients/delete_appointment.html', {'appointment': appointment})
-
-@login_required
-def appointment_list(request):
-    """View to list all appointments in a paginated format."""
-    appointments = Appointment.objects.select_related('therapist', 'client').all()
-    paginator = Paginator(appointments, 10)  # Show 10 appointments per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    return render(request, 'clients/appointment_list.html', {'page_obj': page_obj})
-
-@login_required
-def appointment_detail(request, pk):
-    """View to display detailed information about a specific appointment."""
-    appointment = get_object_or_404(Appointment.objects.select_related('therapist', 'client'), pk=pk)
-    return render(request, 'clients/appointment_detail.html', {'appointment': appointment})
-
-@login_required
-def check_availability(request):
-    """AJAX view to check available slots for a given therapist and date."""
-    therapist_id = request.GET.get('therapist_id')
-    date = request.GET.get('date')
-    slots = []
-
-    if therapist_id and date:
-        therapist = get_object_or_404(User, id=therapist_id)
-        date = timezone.datetime.strptime(date, '%Y-%m-%d').date()
-        
-        weekday = date.weekday()
-        therapist_schedule = TherapistSchedule.objects.filter(therapist=therapist, day_of_week=weekday).first()
-        if therapist_schedule:
-            slots = therapist_schedule.available_slots()
-
-    return JsonResponse({'slots': slots})
-
-
-# client/views.py
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Appointment
-from messaging.models import Conversation
+from django.contrib.auth.decorators import login_required, user_passes_test
+from therapist.models import Appointment, TherapistSchedule
+from messaging.models import Message
+from .models import Feedback
+from .forms import FeedbackForm, AppointmentForm
+from django.utils.timezone import now
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+def is_client(user):
+    return hasattr(user, 'profile') and user.profile.role == 'client'
 
 @login_required
+@user_passes_test(is_client, login_url='home')
 def client_dashboard(request):
-    if not request.user.is_client:
-        return redirect('home')
+    """Dashboard view for clients."""
+    # Fetch upcoming appointments for the logged-in client
+    appointments = Appointment.objects.filter(
+        client=request.user,
+        date__gte=now().date(),
+    ).order_by('date', 'start_time')
 
-    appointments = Appointment.objects.filter(client=request.user)
-    conversations = Conversation.objects.filter(user1=request.user) | Conversation.objects.filter(user2=request.user)
+    # Fetch all schedules for the client's therapist
+    therapist_schedules = TherapistSchedule.objects.filter(
+        therapist__in=[appointment.therapist for appointment in appointments]
+    ).order_by('day_of_week', 'start_time')
 
-    return render(request, 'client/dashboard.html', {'appointments': appointments, 'conversations': conversations})
+    return render(
+        request,
+        'clients/dashboard.html',
+        {
+            'appointments': appointments,
+            'therapist_schedules': therapist_schedules,
+        }
+    )
+
+@login_required
+@user_passes_test(is_client, login_url='home')
+def appointment_detail(request, pk):
+    """View details of a specific appointment."""
+    appointment = get_object_or_404(Appointment, pk=pk, client=request.user)
+    messages = Message.objects.filter(appointment=appointment).order_by('timestamp')
+    feedback = Feedback.objects.filter(appointment=appointment).first()
+
+    return render(
+        request,
+        'clients/appointment_detail.html',
+        {'appointment': appointment, 'messages': messages, 'feedback': feedback}
+    )
+
+@login_required
+@user_passes_test(is_client, login_url='home')
+def give_feedback(request, pk):
+    """Allow clients to give feedback for a specific appointment."""
+    appointment = get_object_or_404(Appointment, pk=pk, client=request.user)
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.appointment = appointment
+            feedback.client = request.user
+            feedback.therapist = appointment.therapist
+            feedback.save()
+            return redirect('client_dashboard')
+    else:
+        form = FeedbackForm()
+
+    return render(request, 'clients/give_feedback.html', {'form': form, 'appointment': appointment})
+
+@login_required
+@user_passes_test(is_client, login_url='home')
+def book_appointment(request):
+    """Allow clients to book an appointment with their therapist."""
+    if request.method == 'POST':
+        form = AppointmentForm(request.POST)
+        if form.is_valid():
+            appointment = form.save(commit=False)
+            appointment.client = request.user
+            appointment.save()
+            return redirect('client_dashboard')
+    else:
+        form = AppointmentForm()
+
+    return render(request, 'clients/book_appointment.html', {'form': form})
+
+@login_required
+@user_passes_test(is_client, login_url='home')
+def view_appointments(request):
+    """View all appointments for the logged-in client."""
+    appointments = Appointment.objects.filter(client=request.user).order_by('date', 'start_time')
+    return render(request, 'clients/view_appointments.html', {'appointments': appointments})
+
+@login_required
+@user_passes_test(is_client, login_url='home')
+def find_therapist(request):
+    """Allow clients to find a therapist."""
+    therapists = User.objects.filter(profile__role='therapist')
+    query = request.GET.get('q')
+    if query:
+        therapists = therapists.filter(username__icontains=query)
+    return render(request, 'clients/find_therapist.html', {'therapists': therapists, 'query': query})

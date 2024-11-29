@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Refer Appointment{% endblock %}
+
+{% block content %}
+<h1>Refer Appointment</h1>
+
+<p>Appointment Date: {{ appointment.date }}</p>
+<p>Time: {{ appointment.start_time }} to {{ appointment.end_time }}</p>
+<p>Client: {{ appointment.client.username }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="new_therapist_id">Select Therapist:</label>
+        <select id="new_therapist_id" name="new_therapist_id" class="form-control">
+            {% for therapist in therapists %}
+                <option value="{{ therapist.id }}">{{ therapist.username }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Refer Appointment</button>
+</form>
+{% endblock %}

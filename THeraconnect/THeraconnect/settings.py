@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'resources',
     'channels',
     'messaging',
+    
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

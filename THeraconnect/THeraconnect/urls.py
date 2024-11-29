@@ -24,6 +24,5 @@ urlpatterns = [
     path('client/', include('client.urls')),
     path('therapist/', include('therapist.urls')),
     path('resource/', include('resources.urls')),
-    
+    path('messaging/', include('messaging.urls')),
 ]
-

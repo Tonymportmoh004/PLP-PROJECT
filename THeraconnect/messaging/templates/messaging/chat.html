@@ -1,16 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Appointment Details{% endblock %}
+{% block title %}Chat{% endblock %}
 
 {% block content %}
-<h1>Appointment Details</h1>
+<h1>Chat for Appointment {{ appointment.id }}</h1>
 
-<p>Date: {{ appointment.date }}</p>
-<p>Time: {{ appointment.start_time }} to {{ appointment.end_time }}</p>
-<p>Therapist: {{ appointment.therapist.username }}</p>
-<p>Zoom Link: <a href="{{ appointment.zoom_link }}">{{ appointment.zoom_link }}</a></p>
-
-<h2>Messages</h2>
 <textarea id="chat-log" cols="100" rows="20" readonly class="form-control mb-3">
     {% for message in messages %}
         {{ message.timestamp }} - {{ message.sender }}: {{ message.message }}
@@ -20,7 +14,7 @@
 <input id="chat-message-submit" type="button" value="Send" class="btn btn-primary">
 
 <script>
-    const roomName = "{{ appointment.id }}";
+    const roomName = "{{ room_name }}";
     const chatSocket = new WebSocket(
         'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
     );
@@ -50,12 +44,4 @@
         messageInputDom.value = '';
     };
 </script>
-
-<h2>Feedback</h2>
-{% if feedback %}
-    <p>Rating: {{ feedback.rating }}</p>
-    <p>Comments: {{ feedback.comments }}</p>
-{% else %}
-    <a href="{% url 'give_feedback' appointment.id %}" class="btn btn-primary">Give Feedback</a>
-{% endif %}
 {% endblock %}

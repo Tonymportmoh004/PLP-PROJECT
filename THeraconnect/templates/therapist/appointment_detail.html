@@ -7,7 +7,7 @@
 
 <p>Date: {{ appointment.date }}</p>
 <p>Time: {{ appointment.start_time }} to {{ appointment.end_time }}</p>
-<p>Therapist: {{ appointment.therapist.username }}</p>
+<p>Client: {{ appointment.client.username }}</p>
 <p>Zoom Link: <a href="{{ appointment.zoom_link }}">{{ appointment.zoom_link }}</a></p>
 
 <h2>Messages</h2>
@@ -50,12 +50,4 @@
         messageInputDom.value = '';
     };
 </script>
-
-<h2>Feedback</h2>
-{% if feedback %}
-    <p>Rating: {{ feedback.rating }}</p>
-    <p>Comments: {{ feedback.comments }}</p>
-{% else %}
-    <a href="{% url 'give_feedback' appointment.id %}" class="btn btn-primary">Give Feedback</a>
-{% endif %}
 {% endblock %}
